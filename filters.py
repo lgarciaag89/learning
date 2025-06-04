@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy.stats import entropy
 from sklearn.feature_selection import mutual_info_classif
 
 
@@ -34,16 +35,28 @@ def remove_lower_correlated_with_class(df, threshold=0.05, label_column='label')
     selected = correlations[correlations > threshold].index
     return df[selected.tolist() + [label_column]]
 
+def compute_entropy(data, n_bins=100):
+    hist, _ = np.histogram(data, bins=n_bins, density=True)
+    return entropy(hist, base=np.e)
+
 
 def entropy_filter(df, threshold=0.01, label_column='label'):
+    n_bins = df.shape[0]
+
     X = df.drop(columns=[label_column])
-    y = df[label_column]
+    entropies = X.apply(lambda col: compute_entropy(col, n_bins=n_bins), axis=0)
 
-    mi = mutual_info_classif(X, y, discrete_features=False)
-    mi_series = pd.Series(mi, index=X.columns)
+    # maxima entropia
+    uniform_distribution = np.ones(n_bins) / n_bins  # Probabilidades iguales
+    max_entropy = entropy(uniform_distribution, base=np.e)
 
-    filtered_columns = mi_series[mi_series > threshold].index
-    return df[filtered_columns.tolist() + [label_column]]
+    # max etropia computed
+    max_entropy_computed = -np.log( 1.0/ n_bins)
+    # Normalizar las entropías
+    entropies = entropies / max_entropy
+
+    filtered_columns = entropies[entropies >= threshold].index
+    return df[[label_column]+filtered_columns.tolist()]
 
 def drop_columns_with_nan(df):
     return df.dropna(axis=1)
@@ -63,7 +76,7 @@ def fillna_numeric_mean(df, label_column='label'):
 
 
 if __name__ == "__main__":
-    path = "D:\\OneDrive - CICESE\\Documentos\\00-WORK\\Docencia\\workspace\\learning\\data\\TR_starPep_AB_training.fasta_AAC_class.csv"
+    path = "data/TR_starPep_AB_training.fasta_AAC_class.csv"
     column_class_lavel = 'Class'
     data = pd.read_csv(path)
     print("Original data shape:", data.shape)
@@ -73,7 +86,7 @@ if __name__ == "__main__":
     data = remove_lower_correlated_with_class(data, threshold=0.05, label_column='Class')
     print("After removing low correlation features:", data.shape)
 
-    data = entropy_filter(data, threshold=0.03, label_column='Class')
+    data = entropy_filter(data, threshold=0.3, label_column='Class')
     print("After entropy filtering:", data.shape)
 
     data = remove_highly_correlated_features(data, threshold=0.90, label_column='Class')
