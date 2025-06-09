@@ -1,6 +1,8 @@
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LinearRegression
 
 def random_forest_classifier(x_data, y_data):
     """
@@ -18,7 +20,7 @@ def random_forest_classifier(x_data, y_data):
 
     # Optionally, you can evaluate the model using cross-validation
     scores = cross_val_score(rf, x_data, y_data, cv=5)
-    print(f"Cross-validation scores: {scores}")
+    print(f"Random forest Cross-validation scores: {scores}")
 
     return rf
 
@@ -34,14 +36,14 @@ def knn_classifier(x_data, y_data, n_neighbors=5):
     Returns:
     KNeighborsClassifier: The trained KNN model.
     """
-    from sklearn.neighbors import KNeighborsClassifier
+
 
     knn = KNeighborsClassifier(n_neighbors=n_neighbors)
     knn.fit(x_data, y_data)
 
     # Optionally, you can evaluate the model using cross-validation
     scores = cross_val_score(knn, x_data, y_data, cv=5)
-    print(f"Cross-validation scores: {scores}")
+    print(f"KNN Cross-validation scores: {scores}")
 
     return knn
 
@@ -56,7 +58,7 @@ def regression_model(x_data, y_data):
     Returns:
     LinearRegression: The trained regression model.
     """
-    from sklearn.linear_model import LinearRegression
+
 
     reg = LinearRegression()
     reg.fit(x_data, y_data)
